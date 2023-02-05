@@ -10,9 +10,9 @@ Analyze disaster data from Appen (https://appen.com/) to build a model for an AP
 - sklearn = 1.1.1
 - nltk = 3.6.1
 - joblib = 1.1.0
-- nltk
-- re
-- sqlalchemy
+- nltk = 3.6.1
+- re = 2.2.1
+- sqlalchemy = 1.4.7
 
 ## 3. Files distribution
 ```
@@ -47,3 +47,5 @@ b. Run the following command in the app's directory to run your web app.
 python run.py
 ```
 c. Go to http://0.0.0.0:3001/
+
+Note: Only `n_estimators` was used in `GridSearchCV`, however there are more hyperparameters that were commented due to the processing time.
