@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
 
@@ -18,6 +19,7 @@ def clean_data(df):
     for column in categories:
         categories[column] = categories[column].str.split('-').str[1]
         categories[column] = categories[column].astype(int)
+        categories[column] = np.where(categories[column] == 1, 1, 0)
 
     df.drop(columns = 'categories', inplace = True)
     df = df.join(categories)
@@ -27,7 +29,7 @@ def clean_data(df):
 
 def save_data(df, database_filename):
     engine = create_engine(f'sqlite:///{database_filename}')
-    df.to_sql('disaster_response', engine, index = False)  
+    df.to_sql('disaster_response', engine, index = False, if_exists = 'replace')  
 
 
 def main():

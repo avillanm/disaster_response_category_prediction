@@ -1,24 +1,66 @@
 import sys
+import nltk
+nltk.download(['punkt', 'wordnet', 'stopwords'])
 
+
+import pandas as pd
+from sqlalchemy import create_engine
+
+import re
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.wordnet import WordNetLemmatizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.multioutput import MultiOutputClassifier
+import joblib
 
 def load_data(database_filepath):
-    pass
-
+    engine = create_engine('sqlite:///'+database_filepath)
+    df = pd.read_sql("select * from disaster_response", engine)
+    X = df['message']
+    Y = df.drop(columns = ['id', 'message', 'original', 'genre'])
+    return X, Y, Y.columns
 
 def tokenize(text):
-    pass
+    text = re.sub(r'[^a-zA-Z0-9]', ' ', text.lower())
+    tokens = word_tokenize(text)
+    tokens = [WordNetLemmatizer().lemmatize(word) for word in tokens if word not in stopwords.words('english')]
+    return tokens
 
 
 def build_model():
-    pass
+    pipeline = Pipeline([
+        ('text_pipeline', TfidfVectorizer(tokenizer=tokenize)),
+        ('clf', MultiOutputClassifier(RandomForestClassifier(n_jobs = -1)))
+        ])
+    
+    parameters = {
+    #'text_pipeline__ngram_range':((1,1),(1,2)),
+    'clf__estimator__n_estimators': [5, 10],
+    #'clf__estimator__min_samples_split': [2, 3, 4]
+    }
+    cv = GridSearchCV(pipeline, param_grid = parameters)
+    return cv
+
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    pass
+    pred = model.predict(X_test)
+    for j, col in enumerate(category_names):
+        print('='*25,col,'='*25)
+        print(classification_report(Y_test[col], pred[:,j]))
 
 
 def save_model(model, model_filepath):
-    pass
+    joblib.dump(model.best_estimator_, model_filepath)
+    print('modelo guardado!')
 
 
 def main():
