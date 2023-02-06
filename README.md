@@ -51,7 +51,7 @@ c. Go to http://0.0.0.0:3001/
 d. General view of project
 <img title="a title" alt="General view" src="images/general_view.png">
 
-d. Classifying messages
+e. Classifying messages
 <img title="a title" alt="classification" src="images/classification.png">
 
 Note: Only `n_estimators` was used in `GridSearchCV`, however there are more hyperparameters that were commented due to the processing time.
