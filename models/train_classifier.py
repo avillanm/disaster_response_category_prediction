@@ -22,13 +22,34 @@ from sklearn.multioutput import MultiOutputClassifier
 import joblib
 
 def load_data(database_filepath):
+    """
+    Load the database and prepare for training
+
+    Args:
+        database_filepath (str): file path of database
+
+    Returns:
+        X: messages
+        Y: targets
+        targets: name of targets
+    """
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql("select * from disaster_response", engine)
     X = df['message']
     Y = df.drop(columns = ['id', 'message', 'original', 'genre'])
-    return X, Y, Y.columns
+    targets = Y.columns
+    return X, Y, targets
 
 def tokenize(text):
+    """
+    Clean, normalize, tokenize and lemmatize the messages
+
+    Args:
+        text (str): text message
+
+    Returns:
+        tokens: list of tokens
+    """
     text = re.sub(r'[^a-zA-Z0-9]', ' ', text.lower())
     tokens = word_tokenize(text)
     tokens = [WordNetLemmatizer().lemmatize(word) for word in tokens if word not in stopwords.words('english')]
@@ -36,6 +57,12 @@ def tokenize(text):
 
 
 def build_model():
+    """
+    Build pipeline and define estimators for gridsearch
+
+    Returns:
+        cv: grid search object with pipeline
+    """
     pipeline = Pipeline([
         ('text_pipeline', TfidfVectorizer(tokenizer=tokenize)),
         ('clf', MultiOutputClassifier(RandomForestClassifier(n_jobs = -1)))
@@ -52,6 +79,15 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """
+    Evaluate and print the results of model
+
+    Args:
+        model : model evaluated
+        X_test (dataframe): test messages
+        Y_test (dataframe): targets
+        category_names (list): name of targets
+    """
     pred = model.predict(X_test)
     for j, col in enumerate(category_names):
         print('='*25,col,'='*25)
@@ -59,11 +95,19 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
+    """
+    Save the model
+
+    Args:
+        model: trained model
+        model_filepath (str): file path of the best model
+    """
     joblib.dump(model.best_estimator_, model_filepath)
-    print('modelo guardado!')
 
 
 def main():
+    """Load, build, train, evaluate and save model
+    """
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
